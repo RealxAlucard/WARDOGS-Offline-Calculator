@@ -1,1 +1,9 @@
+# never commit these: game imagery, build output, installers
+build/
+dist/
+node_modules/
+*.tar
 .gitattributes
+tiles/
+maps/tiles/
+maps/tiles-color/
