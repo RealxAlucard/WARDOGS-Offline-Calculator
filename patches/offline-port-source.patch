@@ -1,0 +1,407 @@
+diff --git a/config/app.json b/config/app.json
+index cf31c18..e762b05 100644
+--- a/config/app.json
++++ b/config/app.json
+@@ -5,7 +5,7 @@
+     }
+   },
+   "assetGateway": {
+-    "enabled": true,
++    "enabled": false,
+     "mode": "preclearance",
+     "origin": "https://assets.wardogs-artillery.com",
+     "directOrigin": "https://assets-v2.wardogs-artillery.com",
+@@ -17,7 +17,7 @@
+     }
+   },
+   "collab": {
+-    "enabled": true,
++    "enabled": false,
+     "serverUrl": "https://lobby.wardogs-artillery.com",
+     "maxParticipants": 8,
+     "roomLifetimeHours": 6,
+@@ -43,7 +43,7 @@
+     }
+   },
+   "feedback": {
+-    "enabled": true,
++    "enabled": false,
+     "serverUrl": "https://lobby.wardogs-artillery.com"
+   },
+   "mapTools": {
+@@ -64,15 +64,18 @@
+     }
+   },
+   "site": {
+-    "lastModified": "2026-09-29",
++    "lastModified": "2026-10-04",
+     "footer": {
+       "disclaimer": "Unofficial community project. Not affiliated with or endorsed by BULKHEAD or the WARDOGS development team.",
+-      "productName": "WARDOGS Artillery Calculator",
++      "productName": "WARDOGS Offline Calculator",
+       "authorLabel": "by",
+       "authorName": "Apollyon",
+       "authorUrl": "https://discord.com/users/202109460238434304",
+       "sourceCodeUrl": "https://github.com/apollyon-sys/wardogs-calculator",
+-      "version": "1.10.1"
++      "version": "1.0.0",
++      "portAuthorName": "RealxAlucard",
++      "portAuthorUrl": "https://discord.com/users/238802331544715268",
++      "feedbackUrl": "https://discord.com/users/238802331544715268"
+     }
+   },
+   "map": {
+diff --git a/js/core/config.js b/js/core/config.js
+index a12995c..eed91ba 100644
+--- a/js/core/config.js
++++ b/js/core/config.js
+@@ -37,7 +37,7 @@ const DEFAULT_APP_CONFIG = {
+             disclaimer:
+                 'Unofficial community project. Not affiliated with or endorsed by BULKHEAD or the WARDOGS development team.',
+             productName:
+-                'WARDOGS Artillery Calculator',
++                'WARDOGS Offline Calculator',
+             authorLabel:
+                 'by',
+             authorName:
+@@ -46,8 +46,14 @@ const DEFAULT_APP_CONFIG = {
+                 'https://discord.com/users/202109460238434304',
+             sourceCodeUrl:
+                 'https://github.com/apollyon-sys/wardogs-calculator',
++            portAuthorName:
++                'RealxAlucard',
++            portAuthorUrl:
++                'https://discord.com/users/238802331544715268',
++            feedbackUrl:
++                'https://discord.com/users/238802331544715268',
+             version:
+-                '1.10.1'
++                '1.0.0'
+         }
+     },
+ 
+diff --git a/js/ui/footer.js b/js/ui/footer.js
+index 36f18ba..83d877b 100644
+--- a/js/ui/footer.js
++++ b/js/ui/footer.js
+@@ -2,14 +2,7 @@
+    FOOTER
+    ========================= */
+ 
+-const FOOTER_PARTNERS = [
+-    {
+-        id: 'wardogs-hub',
+-        label: 'Community partner',
+-        name: 'WARDOGSHUB',
+-        url: 'https://wardogshub.net/?utm_source=wardogs-artillery&utm_medium=partner&utm_campaign=footer'
+-    }
+-];
++const FOOTER_PARTNERS = [];
+ 
+ const DONATION_LINKS = [
+     {
+@@ -580,16 +573,11 @@ const FEEDBACK_LAUNCHER_LABELS = {
+ let feedbackRuntimePromise = null;
+ 
+ function feedbackFeatureEnabled() {
+-    return APP_CONFIG?.feedback?.enabled === true &&
+-        Boolean(
+-            normalizeConfiguredHttpUrl(
+-                APP_CONFIG?.feedback?.serverUrl,
+-                {
+-                    allowLocalhost: true,
+-                    allowSearchAndHash: false
+-                }
+-            )
+-        );
++    return Boolean(
++        normalizeConfiguredHttpUrl(
++            APP_CONFIG?.site?.footer?.feedbackUrl
++        )
++    );
+ }
+ 
+ function feedbackLauncherLabel() {
+@@ -647,14 +635,21 @@ function loadFeedbackRuntime() {
+ }
+ 
+ function createFeedbackLauncher() {
+-    const button = document.createElement('button');
+-    const label = feedbackLauncherLabel();
+-
+-    button.type = 'button';
+-    button.className = 'footer-feedback-button';
+-    button.setAttribute('aria-label', label);
+-    button.title = label;
+-    button.innerHTML = `
++    /* Offline build: feedback goes to the port author's Discord instead of the
++       original site's feedback server. */
++    const link = document.createElement('a');
++    const label = 'Feedback and Bugs';
++
++    link.href =
++        normalizeConfiguredHttpUrl(
++            APP_CONFIG?.site?.footer?.feedbackUrl
++        ) || '#';
++    link.target = '_blank';
++    link.rel = 'noopener noreferrer';
++    link.className = 'footer-feedback-button';
++    link.setAttribute('aria-label', label);
++    link.title = label;
++    link.innerHTML = `
+         <span class="footer-feedback-icon" aria-hidden="true">
+             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+@@ -666,33 +661,9 @@ function createFeedbackLauncher() {
+         <span class="footer-feedback-label"></span>
+     `;
+ 
+-    button.querySelector('.footer-feedback-label').textContent = label;
+-
+-    button.addEventListener('click', async () => {
+-        if (button.disabled) return;
+-
+-        button.disabled = true;
+-
+-        try {
+-            await loadFeedbackRuntime();
+-
+-            if (typeof openFeedbackDialog !== 'function') {
+-                throw new Error('feedback-runtime');
+-            }
+-
+-            if (typeof trackAnalytics === 'function') {
+-                trackAnalytics('feedback-opened', {});
+-            }
+-
+-            openFeedbackDialog();
+-        } catch (error) {
+-            console.warn('Feedback form could not load:', error);
+-        } finally {
+-            button.disabled = false;
+-        }
+-    });
++    link.querySelector('.footer-feedback-label').textContent = label;
+ 
+-    return button;
++    return link;
+ }
+ 
+ function createSourceCodeLink(placement = 'footer') {
+@@ -741,6 +712,44 @@ function createSourceCodeLink(placement = 'footer') {
+     return link;
+ }
+ 
++function appendOfflineCredit(container, config, withVersion) {
++    const addPerson = (label, name, url) => {
++        container.appendChild(document.createTextNode(`${label} `));
++
++        const link = document.createElement('a');
++        link.href = normalizeConfiguredHttpUrl(url) || '#';
++        link.target = '_blank';
++        link.rel = 'noopener noreferrer';
++
++        const strong = document.createElement('strong');
++        strong.textContent = name;
++        link.appendChild(strong);
++        container.appendChild(link);
++    };
++
++    addPerson(
++        'Offline Port by',
++        config.portAuthorName || 'RealxAlucard',
++        config.portAuthorUrl ||
++            'https://discord.com/users/238802331544715268'
++    );
++
++    container.appendChild(document.createTextNode(' - '));
++
++    addPerson(
++        'Original Calculator by',
++        config.authorName || 'Apollyon',
++        config.authorUrl
++    );
++
++    if (withVersion && config.version) {
++        const version = document.createElement('span');
++        version.className = 'footer-version';
++        version.textContent = `(${config.version})`;
++        container.appendChild(version);
++    }
++}
++
+ function renderFooter() {
+     const footer =
+         $('siteFooter') ||
+@@ -828,75 +837,12 @@ function renderFooter() {
+     author.className =
+         'footer-author';
+ 
+-    const productName =
+-        String(
+-            config.productName ||
+-            'WARDOGS Artillery Calculator'
+-        );
+-
+-    const authorLabel =
+-        String(
+-            typeof tr === 'function'
+-                ? tr('authorLabel')
+-                : (config.authorLabel || 'by')
+-        );
+-
+-    author.append(
+-        document.createTextNode(
+-            `${productName} ${authorLabel} `
+-        )
+-    );
+-
+-    const link =
+-        document.createElement(
+-            'a'
+-        );
+-
+-    link.href =
+-        normalizeConfiguredHttpUrl(
+-            config.authorUrl
+-        ) || '#';
+-
+-    link.target =
+-        '_blank';
+-
+-    link.rel =
+-        'noopener noreferrer';
+-
+-    const strong =
+-        document.createElement(
+-            'strong'
+-        );
+-
+-    strong.textContent =
+-        config.authorName ||
+-        'Apollyon';
+-
+-    link.appendChild(
+-        strong
+-    );
+-
+-    author.appendChild(
+-        link
++    appendOfflineCredit(
++        author,
++        config,
++        true
+     );
+ 
+-    if (config.version) {
+-        const version =
+-            document.createElement(
+-                'span'
+-            );
+-
+-        version.className =
+-            'footer-version';
+-
+-        version.textContent =
+-            `(${config.version})`;
+-
+-        author.appendChild(
+-            version
+-        );
+-    }
+-
+     meta.appendChild(
+         author
+     );
+diff --git a/js/ui/layout/mobile-menu.js b/js/ui/layout/mobile-menu.js
+index 1e1afa1..5d79480 100644
+--- a/js/ui/layout/mobile-menu.js
++++ b/js/ui/layout/mobile-menu.js
+@@ -1,8 +1,8 @@
+-/* =========================
+-   MOBILE RIGHT-SIDE MENU
+-   ========================= */
+-
+-const MOBILE_MENU_TEXT = {
++/* =========================
++   MOBILE RIGHT-SIDE MENU
++   ========================= */
++
++const MOBILE_MENU_TEXT = {
+     en: {
+         menu: 'Menu',
+         appearance: 'Appearance',
+@@ -601,47 +601,10 @@ function createMobileCreditsBlock() {
+     creditLine.className =
+         'mobile-side-menu-credit-line';
+ 
+-    const productName =
+-        String(
+-            config.productName ||
+-            'WARDOGS Artillery Calculator'
+-        );
+-
+-    const authorLabel =
+-        String(
+-            typeof tr === 'function'
+-                ? tr('authorLabel')
+-                : (config.authorLabel || 'by')
+-        );
+-
+-    creditLine.append(
+-        document.createTextNode(
+-            `${productName} ${authorLabel} `
+-        )
+-    );
+-
+-    const authorLink =
+-        document.createElement(
+-            'a'
+-        );
+-
+-    authorLink.href =
+-        normalizeConfiguredHttpUrl(
+-            config.authorUrl
+-        ) || '#';
+-
+-    authorLink.target =
+-        '_blank';
+-
+-    authorLink.rel =
+-        'noopener noreferrer';
+-
+-    authorLink.textContent =
+-        config.authorName ||
+-        'Apollyon';
+-
+-    creditLine.appendChild(
+-        authorLink
++    appendOfflineCredit(
++        creditLine,
++        config,
++        false
+     );
+ 
+     if (config.version) {
+diff --git a/src/pages/mobile/index.html b/src/pages/mobile/index.html
+index f17c274..e6c5919 100644
+--- a/src/pages/mobile/index.html
++++ b/src/pages/mobile/index.html
+@@ -190,17 +190,6 @@
+                 </div>
+ 
+                 <a class="mobile-desktop-link" data-i18n="desktopVersion" id="mobileDesktopVersion" href="../?desktop=1">Desktop version</a>
+-                <a
+-                    class="mobile-partner-link"
+-                    href="https://wardogshub.net/?utm_source=wardogs-artillery&utm_medium=partner&utm_campaign=footer"
+-                    target="_blank"
+-                    rel="noopener noreferrer"
+-                    data-umami-event="partner-click"
+-                    data-umami-event-partner="wardogs-hub"
+-                    data-umami-event-placement="mobile-footer"
+-                >
+-                    Community partner: <strong>WARDOGSHUB</strong>
+-                </a>
+             </section>
+ 
+             <section class="mobile-panel" data-mobile-panel="saved">

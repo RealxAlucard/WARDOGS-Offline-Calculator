@@ -1,0 +1,8 @@
+{
+  "name": "wardogs-offline-calculator",
+  "productName": "WARDOGS Offline Calculator",
+  "version": "1.0.0",
+  "description": "Offline desktop port of the WARDOGS Artillery Calculator (unofficial)",
+  "main": "main.js",
+  "license": "MIT"
+}
