@@ -37,8 +37,8 @@ The tiles come from in-game captures (game imagery, ~1.8 GB), so they are not co
 folder, calibration points, and `CORRECTIONS = []` for a new map; `BOUNDS` is the shared `tileBounds`
 square from the map configs). Each map needs 21,845 tiles (zoom 0-7).
 
-# Installation of [RELEASE v1.0.0](https://github.com/RealxAlucard/WARDOGS-Offline-Calculator/releases/tag/Release)
-    1. To install the calculator, simply download the setup.exe "wardgos-offline-installer-v5.exe" and run it.
+# Installation of [RELEASE](https://github.com/RealxAlucard/WARDOGS-Offline-Calculator/releases/tag/Release)
+    1. To install the calculator, simply download the setup.exe "wardogs-offline-installer-v5.exe" and run it.
     2. This will prompt you with an installer and simply choose where you want to install to.
     3. After installation, navigate to the "...\WARDOGS Artillery Calculator\" folder that has the "WARDOGS Calculator - Offline.exe" and double click to run.
     4. (2) Things will occur: 
